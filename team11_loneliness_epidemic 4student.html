@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Loneliness Epidemic — Team 11</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #F8F9FA; color: #1a1a1a; }
+
+  .header { background: #1F2D3D; color: white; padding: 2.5rem 2rem 2rem; text-align: center; }
+  .header-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #aaa; margin-bottom: 0.75rem; }
+  .header h1 { font-size: clamp(1.3rem, 3.5vw, 2rem); font-weight: 700; line-height: 1.35; max-width: 780px; margin: 0 auto 1rem; }
+  .header h1 span { color: #E74C3C; }
+  .header-sub { font-size: 14px; color: #bbb; max-width: 620px; margin: 0 auto; line-height: 1.6; }
+
+  .stat-strip { background: #C0392B; display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+  .stat-item { padding: 1.2rem 1rem; border-right: 1px solid rgba(255,255,255,0.2); }
+  .stat-item:last-child { border-right: none; }
+  .stat-num { font-size: clamp(1.5rem, 3.5vw, 2.2rem); font-weight: 700; color: white; display: block; }
+  .stat-label { font-size: 11px; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; display: block; line-height: 1.4; }
+
+  .dm-bar { background: #2C3E50; padding: 0.7rem 2rem; text-align: center; font-size: 13px; color: #aaa; }
+  .dm-bar strong { color: #E74C3C; }
+
+  .main { max-width: 1060px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  .section { margin-bottom: 2.5rem; }
+  .section-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #C0392B; margin-bottom: 0.3rem; }
+  .section-title { font-size: clamp(1rem, 2.2vw, 1.35rem); font-weight: 700; color: #1F2D3D; margin-bottom: 0.35rem; line-height: 1.3; }
+  .section-sub { font-size: 13px; color: #555; margin-bottom: 1.1rem; line-height: 1.6; max-width: 820px; }
+  .context-note { font-size: 12px; color: #888; font-style: italic; margin-bottom: 0.75rem; }
+
+  .chart-wrap { background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 1.25rem; }
+  .source { font-size: 11px; color: #999; margin-top: 0.6rem; text-align: right; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .tab-btn { font-size: 13px; padding: 6px 16px; border: 1px solid #ddd; background: #fff; color: #666; cursor: pointer; border-radius: 2px; transition: all 0.15s; }
+  .tab-btn.active { background: #1F2D3D; color: white; border-color: #1F2D3D; }
+
+  .hero-finding { background: #FADBD8; border-left: 4px solid #C0392B; border-radius: 2px; padding: 1rem 1.25rem; margin-bottom: 1.1rem; }
+  .hero-finding .hero-num { font-size: 2rem; font-weight: 700; color: #C0392B; }
+  .hero-finding .hero-desc { font-size: 13px; color: #7B241C; margin-top: 3px; line-height: 1.5; }
+
+  .support-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .support-card { background: #F2F3F4; border: 1px solid #ddd; border-radius: 4px; padding: 0.9rem 1.1rem; }
+  .support-card .s-num { font-size: 1.6rem; font-weight: 700; color: #1F2D3D; }
+  .support-card .s-desc { font-size: 12px; color: #555; margin-top: 3px; line-height: 1.5; }
+
+  .divider { border: none; border-top: 1px solid #e5e5e5; margin: 2rem 0; }
+
+  .cta { background: #1F2D3D; color: white; padding: 1.75rem 2rem; border-radius: 4px; margin-top: 2rem; }
+  .cta h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.6rem; line-height: 1.4; }
+  .cta p { font-size: 13px; color: #bbb; max-width: 680px; line-height: 1.7; }
+  .cta .highlight { color: #E74C3C; font-weight: 700; }
+  .cta .action-pill { margin-top: 1rem; background: #C0392B; color: white; display: inline-block; padding: 0.5rem 1.25rem; border-radius: 2px; font-size: 13px; font-weight: 700; }
+
+  .footer { background: #1F2D3D; color: #777; font-size: 11px; text-align: center; padding: 1.25rem; margin-top: 2rem; line-height: 1.9; }
+  .footer strong { color: #aaa; }
+
+  @media (max-width: 600px) {
+    .stat-strip { grid-template-columns: 1fr; }
+    .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.2); }
+    .support-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">9DATAV Data Visualisation Challenge 2026 · Team 11</div>
+  <h1>Loneliness kills like smoking — and Ireland's <span>hidden victims are 35–64, not 65+</span></h1>
+  <p class="header-sub">Irish policy targets older adults. OECD data from 32 countries shows the highest loneliness in Ireland is among working-age adults. The intervention is aimed at the wrong group.</p>
+</div>
+
+<div class="stat-strip">
+  <div class="stat-item">
+    <span class="stat-num">4.47%</span>
+    <span class="stat-label">of Ireland's 35–64 adults feel lonely — higher than any other Irish age group</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">+21%</span>
+    <span class="stat-label">rise in middle-aged loneliness in Ireland between the two OECD measurement points</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">9.45%</span>
+    <span class="stat-label">of Irish adults lack any social support — nearly 1 in 10 with nobody to turn to</span>
+  </div>
+</div>
+
+<div class="dm-bar">
+  Addressed to: <strong>Prof. Rose Anne Kenny, Principal Investigator, TILDA (Irish Longitudinal Study on Ageing)</strong> &nbsp;·&nbsp; Action: commission TILDA analysis on working-age isolation and pilot intervention for adults aged 35–64
+</div>
+
+<div class="main">
+
+  <!-- CHART 1 — HERO -->
+  <div class="section">
+    <div class="section-label">Main finding · OECD data · 32 countries</div>
+    <div class="section-title">Ireland's loneliest adults are 35–64, not 65+. Policy is targeting the wrong group.</div>
+    <div class="section-sub">In most countries, loneliness peaks in old age. Ireland breaks this pattern. Middle-aged adults report higher loneliness than older adults — a finding with no equivalent in current Irish policy. Switch age groups below. Ireland is in red.</div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showAge('middle',this)">Middle-aged 35–64</button>
+      <button class="tab-btn" onclick="showAge('old',this)">Older adults 65+</button>
+      <button class="tab-btn" onclick="showAge('young',this)">Young adults 15–34</button>
+    </div>
+
+    <div class="hero-finding">
+      <div class="hero-num" id="hero-num">4.47%</div>
+      <div class="hero-desc" id="hero-desc">of Ireland's middle-aged adults (35–64) feel lonely — the <strong>highest of any Irish age group</strong>, and above the OECD average for this group. This is the group Irish policy ignores.</div>
+    </div>
+
+    <div class="chart-wrap">
+      <div style="position:relative;height:400px;"><canvas id="chart1"></canvas></div>
+      <div class="source">Source: OECD How's Life? Social Connections. Measure: % feeling lonely. 32 countries with complete age-group data. Latest available year per country.</div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- CHART 2 — SUPPORT -->
+  <div class="section">
+    <div class="section-label">Supporting evidence · OECD · 47 countries</div>
+    <div class="section-title">Ireland's social support gap has worsened — nearly 1 in 10 adults have nobody to rely on</div>
+    <div class="section-sub">Ireland's "lack of social support" peaked at 9.45% — nearly 1 in 10 adults with nobody to turn to in a crisis. This confirms that middle-aged isolation is not a statistical artefact but part of a wider structural problem.</div>
+
+    <div class="support-row">
+      <div class="support-card">
+        <div class="s-num">9.45%</div>
+        <div class="s-desc">Ireland's peak — nearly 1 in 10 adults with no one to rely on. Source: OECD How's Life?</div>
+      </div>
+      <div class="support-card">
+        <div class="s-num">OECD avg: 10.23%</div>
+        <div class="s-desc">Ireland is close to the OECD average but has worsened faster than most comparable countries.</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div style="position:relative;height:500px;"><canvas id="chart2"></canvas></div>
+      <div class="source">Source: OECD How's Life? Social Connections. Measure: % lacking social support. 47 countries. Ireland shown at its peak value of 9.45%.</div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- CHART 3 — CONTEXT ONLY, smaller -->
+  <div class="section">
+    <div class="section-label">Structural context · US Time Use data · Why it happens</div>
+    <div class="section-title">Time with friends collapses at 25 and never recovers</div>
+    <p class="context-note">Note: this chart uses US data (American Time Use Survey) as structural context only — not Ireland-specific prevalence.</p>
+    <div class="section-sub">By age 35, most adults spend under 40 minutes a day with friends. This is the structural mechanism behind middle-aged loneliness — not personal failure, but the architecture of adult life.</div>
+
+    <div class="chart-wrap">
+      <div style="position:relative;height:280px;"><canvas id="chart3"></canvas></div>
+      <div class="source">Source: Our World in Data / American Time Use Survey. Hours/day with friends by age. Structural context only.</div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <h2>One recommended action for Prof. Rose Anne Kenny, TILDA</h2>
+    <p>TILDA is Ireland's most authoritative longitudinal study — but its scope begins at age 50. The data above shows the crisis begins at 35. <span class="highlight">Commissioning a TILDA analysis of working-age isolation (35–64) would be the first Ireland-specific evidence base for this group</span> — and would give the next Commission on Loneliness the data it needs to recommend a targeted pilot intervention.</p>
+    <div class="action-pill">Recommended action: Commission TILDA analysis on working-age isolation, ages 35–64</div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong>Team 11 · The Loneliness Epidemic</strong> · 9DATAV Data Visualisation Challenge 2026 · NCI Masters Programme<br/>
+  Data: OECD How's Life? Social Connections (47 countries) · Our World in Data / American Time Use Survey (structural context only) · Meta-Gallup Global State of Social Connections<br/>
+  All loneliness figures: OECD measure "Feeling lonely" or "Lack of social support" (% population aged 15+). Ireland's 9.45% is peak value across OECD measurement points.
+</div>
+
+<script>
+const ageData = [
+  {country:"Austria",young:2.88,middle:2.47,old:4.42},
+  {country:"Belgium",young:4.85,middle:6.42,old:7.4},
+  {country:"Bulgaria",young:3.84,middle:4.42,old:13.07},
+  {country:"Canada",young:20.05,middle:13.36,old:11.33},
+  {country:"Croatia",young:1.62,middle:4.53,old:12.36},
+  {country:"Czechia",young:1.86,middle:3.14,old:7.7},
+  {country:"Denmark",young:8.94,middle:4.66,old:4.05},
+  {country:"Estonia",young:3.57,middle:3.32,old:7.31},
+  {country:"Finland",young:4.05,middle:3.1,old:4.86},
+  {country:"France",young:5.22,middle:5.61,old:8.55},
+  {country:"Germany",young:6.35,middle:6.74,old:7.26},
+  {country:"Greece",young:2.6,middle:3.69,old:9.25},
+  {country:"Hungary",young:4.3,middle:5.98,old:12.92},
+  {country:"Iceland",young:4.14,middle:3.65,old:3.75},
+  {country:"Ireland",young:2.16,middle:4.47,old:3.8,ireland:true},
+  {country:"Italy",young:2.42,middle:4.01,old:7.19},
+  {country:"Japan",young:6.6,middle:6.5,old:3.9},
+  {country:"Latvia",young:2.16,middle:3.02,old:8.59},
+  {country:"Lithuania",young:3.71,middle:5.1,old:13.24},
+  {country:"Luxembourg",young:2.43,middle:5.52,old:5.64},
+  {country:"Netherlands",young:5.64,middle:5.57,old:5.54},
+  {country:"Norway",young:3.91,middle:3.46,old:3.22},
+  {country:"Poland",young:2.47,middle:3.68,old:10.25},
+  {country:"Portugal",young:3.12,middle:4.18,old:12.45},
+  {country:"Romania",young:4.6,middle:6.05,old:14.07},
+  {country:"Slovak Republic",young:1.78,middle:2.72,old:6.83},
+  {country:"Slovenia",young:1.88,middle:2.14,old:6.62},
+  {country:"Spain",young:2.08,middle:3.46,old:6.22},
+  {country:"Sweden",young:5.54,middle:6.34,old:5.27},
+  {country:"Switzerland",young:2.34,middle:4.72,old:4.31},
+  {country:"United Kingdom",young:6.74,middle:5.12,old:5.58},
+  {country:"United States",young:24.38,middle:15.13,old:7.84},
+];
+
+const ssData = [
+  {country:"Türkiye",value:26.68},{country:"Peru",value:22.5},{country:"Mexico",value:21.09},
+  {country:"Korea",value:20.26},{country:"Indonesia",value:18.15},{country:"Greece",value:16.82},
+  {country:"Bulgaria",value:15.58},{country:"Latvia",value:15.43},{country:"Chile",value:15.39},
+  {country:"Romania",value:15.36},{country:"Japan",value:13.56},{country:"Portugal",value:13.42},
+  {country:"South Africa",value:13.2},{country:"Italy",value:12.06},{country:"Hungary",value:10.7},
+  {country:"Costa Rica",value:10.03},{country:"United States",value:10.02},{country:"Argentina",value:9.89},
+  {country:"Ireland",value:9.45,ireland:true},{country:"Estonia",value:9.78},
+  {country:"Israel",value:9.78},{country:"Canada",value:9.67},{country:"Thailand",value:9.4},
+  {country:"Colombia",value:9.32},{country:"Czechia",value:9.28},{country:"Brazil",value:8.9},
+  {country:"Croatia",value:8.14},{country:"Slovak Republic",value:8.0},{country:"Lithuania",value:7.88},
+  {country:"Austria",value:7.85},{country:"France",value:7.78},{country:"Luxembourg",value:7.71},
+  {country:"Belgium",value:7.29},{country:"Slovenia",value:7.01},{country:"Spain",value:6.82},
+  {country:"Germany",value:6.73},{country:"Sweden",value:6.71},{country:"Finland",value:6.4},
+  {country:"Switzerland",value:5.67},{country:"Poland",value:5.6},{country:"Australia",value:5.32},
+  {country:"New Zealand",value:5.26},{country:"Norway",value:5.03},{country:"Netherlands",value:4.93},
+  {country:"United Kingdom",value:4.21},{country:"Denmark",value:4.05},{country:"Iceland",value:2.56},
+].sort((a,b) => b.value - a.value);
+
+const timeData = [
+  {age:15,f:1.58},{age:16,f:1.53},{age:17,f:1.84},{age:18,f:2.04},{age:19,f:1.86},
+  {age:20,f:1.82},{age:21,f:1.85},{age:22,f:1.48},{age:23,f:1.55},{age:24,f:1.47},
+  {age:25,f:1.11},{age:26,f:1.18},{age:27,f:1.09},{age:28,f:0.97},{age:29,f:0.9},
+  {age:30,f:0.78},{age:31,f:0.77},{age:32,f:0.71},{age:33,f:0.75},{age:34,f:0.6},
+  {age:35,f:0.61},{age:36,f:0.61},{age:37,f:0.66},{age:38,f:0.6},{age:39,f:0.49},
+  {age:40,f:0.52},{age:41,f:0.55},{age:42,f:0.6},{age:43,f:0.61},{age:44,f:0.56},
+  {age:45,f:0.54},{age:46,f:0.56},{age:47,f:0.57},{age:48,f:0.46},{age:49,f:0.57},
+  {age:50,f:0.43},{age:55,f:0.51},{age:60,f:0.55},{age:65,f:0.52},{age:70,f:0.67},{age:80,f:0.53},
+];
+
+const heroText = {
+  middle:{ num:"4.47%", desc:"of Ireland's middle-aged adults (35–64) feel lonely — the <strong>highest of any Irish age group</strong>, and above the OECD average for this group. This is the group Irish policy ignores." },
+  old:   { num:"3.80%", desc:"of Ireland's older adults (65+) feel lonely — <strong>lower than the middle-aged group</strong>. Yet these are the adults Irish loneliness policy focuses on." },
+  young: { num:"2.16%", desc:"of Ireland's young adults (15–34) feel lonely — the <strong>lowest of any Irish age group</strong>. The age-group pattern in Ireland is the reverse of most OECD countries." },
+};
+
+let chart1 = null;
+
+function showAge(key, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('hero-num').textContent = heroText[key].num;
+  document.getElementById('hero-desc').innerHTML = heroText[key].desc;
+  buildChart1(key);
+}
+
+function buildChart1(key) {
+  const sorted = [...ageData].sort((a,b) => b[key]-a[key]);
+  if (chart1) chart1.destroy();
+  chart1 = new Chart(document.getElementById('chart1').getContext('2d'), {
+    type:'bar',
+    data:{ labels: sorted.map(d=>d.country), datasets:[{ data: sorted.map(d=>d[key]), backgroundColor: sorted.map(d=>d.ireland?'#C0392B':'#BDC3C7'), borderColor: sorted.map(d=>d.ireland?'#922B21':'#A0A0A0'), borderWidth:1 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1F2D3D', titleFont:{family:'Arial',size:13,weight:'bold'}, bodyFont:{family:'Arial',size:12}, padding:10, callbacks:{ label: c=>` ${c.parsed.x.toFixed(2)}% feel lonely` } } },
+      scales:{
+        x:{ title:{display:true,text:'% who feel lonely',font:{family:'Arial',size:11},color:'#888'}, grid:{color:'#f0f0f0'}, ticks:{font:{family:'Arial',size:11},color:'#666'} },
+        y:{ ticks:{ font: c=>({family:'Arial',size:11,weight:c.tick.label==='Ireland'?'bold':'normal'}), color: c=>c.tick.label==='Ireland'?'#C0392B':'#444' }, grid:{display:false} }
+      }
+    }
+  });
+}
+
+(function(){
+  new Chart(document.getElementById('chart2').getContext('2d'), {
+    type:'bar',
+    data:{ labels:ssData.map(d=>d.country), datasets:[{ data:ssData.map(d=>d.value), backgroundColor:ssData.map(d=>d.ireland?'#C0392B':'#BDC3C7'), borderColor:ssData.map(d=>d.ireland?'#922B21':'#A0A0A0'), borderWidth:1 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1F2D3D', titleFont:{family:'Arial',size:13,weight:'bold'}, bodyFont:{family:'Arial',size:12}, padding:10, callbacks:{ label:c=>` ${c.parsed.x.toFixed(2)}% lack social support` } } },
+      scales:{
+        x:{ title:{display:true,text:'% with no one to rely on in a crisis',font:{family:'Arial',size:11},color:'#888'}, grid:{color:'#f0f0f0'}, ticks:{font:{family:'Arial',size:11},color:'#666'} },
+        y:{ ticks:{ font:c=>({family:'Arial',size:10,weight:c.tick.label==='Ireland'?'bold':'normal'}), color:c=>c.tick.label==='Ireland'?'#C0392B':'#444' }, grid:{display:false} }
+      }
+    }
+  });
+})();
+
+(function(){
+  const trapPlugin = {
+    id:'trap',
+    beforeDraw(chart){
+      const {ctx:c,chartArea:{top,bottom},scales:{x}}=chart;
+      const x1=x.getPixelForValue(35),x2=x.getPixelForValue(64);
+      c.save();
+      c.fillStyle='rgba(192,57,43,0.07)'; c.fillRect(x1,top,x2-x1,bottom-top);
+      c.strokeStyle='rgba(192,57,43,0.35)'; c.setLineDash([4,4]); c.lineWidth=1;
+      c.beginPath();c.moveTo(x1,top);c.lineTo(x1,bottom);c.stroke();
+      c.beginPath();c.moveTo(x2,top);c.lineTo(x2,bottom);c.stroke();
+      c.setLineDash([]);
+      c.fillStyle='#C0392B'; c.font='bold 11px Arial'; c.fillText('Ages 35–64',x1+5,top+14);
+      c.font='10px Arial'; c.fillText('Loneliness trap',x1+5,top+27);
+      c.restore();
+    }
+  };
+  new Chart(document.getElementById('chart3').getContext('2d'), {
+    type:'line', plugins:[trapPlugin],
+    data:{ labels:timeData.map(d=>d.age), datasets:[{ data:timeData.map(d=>d.f), borderColor:'#1F2D3D', borderWidth:2.5, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#C0392B', tension:0.4, fill:{target:'origin',above:'rgba(189,195,199,0.12)'} }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1F2D3D', titleFont:{family:'Arial',size:13,weight:'bold'}, bodyFont:{family:'Arial',size:12}, padding:10, callbacks:{ title:c=>`Age ${c[0].label}`, label:c=>` ${c.parsed.y.toFixed(2)} hrs/day with friends` } } },
+      scales:{
+        x:{ title:{display:true,text:'Age',font:{family:'Arial',size:11},color:'#888'}, grid:{color:'#f0f0f0'}, ticks:{font:{family:'Arial',size:11},color:'#666',maxTicksLimit:14} },
+        y:{ title:{display:true,text:'Hours/day with friends',font:{family:'Arial',size:11},color:'#888'}, grid:{color:'#f0f0f0'}, ticks:{font:{family:'Arial',size:11},color:'#666'}, min:0 }
+      }
+    }
+  });
+})();
+
+buildChart1('middle');
+</script>
+</body>
+</html>
